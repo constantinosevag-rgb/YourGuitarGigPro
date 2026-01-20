@@ -4,7 +4,7 @@
 
 YourGuitarGig PRO is a web-based offline application designed to replace messy paper setlists and complex expensive software. It allows musicians to load sheet music, lyrics, or chords (PDF & Images), organize them instantly, and perform with seamless auto-scrolling live.
 
-🔗 **[Click here to run the App]()** 
+🔗 **[Click here to run the App](https://constantinosevag-rgb.github.io/YourGuitarGigPro/https://constantinosevag-rgb.github.io/YourGuitarGigPro/)** 
 
 ---
 
