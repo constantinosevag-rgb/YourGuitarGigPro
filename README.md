@@ -60,7 +60,7 @@ YourGuitarGig runs entirely **Client-Side** in your browser.
 ---
 
 ## 💻 System Requirements
-* **OS:** Windows, macOS, Linux, iOS (iPad), Android.
+* **OS:** Windows, macOS, Linux, iOS (iPad), Android. [Not recommended for Phone devices as is not optimized for small screens]
 * **Browser:** Any modern web browser (Google Chrome, Safari, Edge, Firefox).
 * **Hardware:** No special hardware required. Works on low-end laptops and tablets.
 * **Internet:** Only required to load the page initially. Once loaded, it runs **Offline**.
