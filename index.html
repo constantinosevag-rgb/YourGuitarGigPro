@@ -837,6 +837,92 @@
         .info-section ul {
             padding-left: 20px;
         }
+
+        /* --- METRONOME --- */
+        .metro-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            align-items: center;
+            margin-top: 16px;
+            text-align: left;
+        }
+
+        .metro-controls label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .metro-row {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .metro-row .value {
+            color: var(--accent);
+            font-weight: 700;
+            min-width: 72px;
+            text-align: right;
+        }
+
+        .metro-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 18px;
+        }
+
+        .metro-btn {
+            background: var(--item-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 700;
+            min-width: 140px;
+        }
+
+        .metro-btn.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .metro-badge {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        /* --- SEARCH (SIDEBAR) --- */
+        .search-wrap {
+            margin-bottom: 10px;
+        }
+
+        .search-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--item-bg);
+            color: var(--text-main);
+            outline: none;
+            font-size: 13px;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
     </style>
 </head>
 
@@ -851,6 +937,7 @@
             <button class="menu-item" onclick="openTuner()">🎸 Reference Tuner</button>
             <button class="menu-item" onclick="openChords()">🎼 Chords Library</button>
             <button class="menu-item" onclick="openInfo()">ℹ️ Info & Help</button>
+            <button class="menu-item" onclick="toggleMetronome()">🕒 Metronome</button>
             <button class="menu-item" onclick="enterApp()">🚀 Start Gig</button>
             <button class="menu-close" onclick="closeMenu()">Close</button>
         </div>
@@ -887,6 +974,12 @@
                 <div class="inst-card"><span class="inst-icon">🎼</span>
                     <h4>Chords DB</h4>
                     <p>Accurate shapes for every chord.</p>
+                </div>
+
+                <!-- NEW: Metronome card -->
+                <div class="inst-card"><span class="inst-icon">🕒</span>
+                    <h4>Metronome</h4>
+                    <p>Start/Stop, BPM slider, Sound + Volume. Stays open while using other Tools.</p>
                 </div>
             </div>
 
@@ -979,6 +1072,7 @@
                 🎸 Dashboard
                 <button class="icon-btn" onclick="exitApp()" title="Home">🏠 Home</button>
             </div>
+
             <div class="social-bar">
                 <button class="social-btn sp-btn" onclick="window.open('http://spotify.com', '_blank')"><svg
                         viewBox="0 0 24 24">
@@ -1009,6 +1103,13 @@
                 <button class="btn-action" onclick="document.getElementById('fileInput').click()">📄 Files</button>
                 <button class="btn-action" onclick="document.getElementById('folderInput').click()">📂 Folder</button>
             </div>
+
+            <!-- NEW: Search bar -->
+            <div class="search-wrap">
+                <input id="songSearch" class="search-input" type="search"
+                    placeholder="Search songs (name/pdf/image)..." />
+            </div>
+
             <div id="sidebar-scroll"></div>
         </div>
         <div id="main-view">
@@ -1027,10 +1128,61 @@
         </div>
     </div>
 
+    <!-- NEW: METRONOME MODAL (stays open even when other modals open) -->
+    <div id="metronome-modal" class="modal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeMetronome()">✖</button>
+            <h2>
+                Metronome
+                <span class="metro-badge" id="metroStatus">Stopped</span>
+            </h2>
+            <p style="color:var(--text-muted); margin-bottom:10px;">
+                Simple click track. Change BPM & sound while playing.
+            </p>
+
+            <div class="metro-controls">
+                <div class="metro-row">
+                    <label for="bpmSlider"><strong>BPM</strong></label>
+                    <span class="value"><span id="bpmValue">120</span></span>
+                </div>
+                <div class="metro-row">
+                    <input type="range" id="bpmSlider" min="40" max="240" value="120" style="width:100%;">
+                </div>
+
+                <div>
+                    <label for="metroSound"><strong>Sound</strong></label>
+                    <select id="metroSound" class="filter-btn"
+                        style="width:100%; border-radius:12px; padding:10px 12px;">
+                        <option value="click">Click</option>
+                        <option value="beep">Beep</option>
+                        <option value="wood">Woodblock</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="metroVolume"><strong>Volume</strong></label>
+                    <select id="metroVolume" class="filter-btn"
+                        style="width:100%; border-radius:12px; padding:10px 12px;">
+                        <option value="0.2">Low</option>
+                        <option value="0.35" selected>Med</option>
+                        <option value="0.5">High</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="metro-actions">
+                <button class="metro-btn primary" id="metroToggleBtn" onclick="toggleMetronomeRun()">Start</button>
+                <button class="metro-btn" onclick="tapTempo()">Tap Tempo</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- CORE FUNCTIONS ---
         function openMenu() { document.getElementById('menu-overlay').classList.add('active'); }
         function closeMenu() { document.getElementById('menu-overlay').classList.remove('active'); }
+
+        // NOTE: metronome must stay open; so DO NOT close it in other openX() calls.
         function openInfo() { closeMenu(); document.getElementById('info-modal').classList.add('open'); }
         function closeInfo() { document.getElementById('info-modal').classList.remove('open'); }
         function enterApp() { closeMenu(); document.getElementById('landing-page').classList.add('hidden'); setTimeout(() => document.getElementById('app-container').classList.add('visible'), 300); renderSidebar(); }
@@ -1125,18 +1277,44 @@
         let setlists = [{ id: 'default', name: 'Setlist 1', songs: [] }]; let curFolder = 'default';
         let isScrolling = false, scrollReq, scrollAcc = 0, dragItem = null, dropPos = 'none';
 
+        // NEW: live search state
+        let songSearchQuery = '';
+
+        // NEW: bind search input once
+        (function bindSongSearch() {
+            const inp = document.getElementById('songSearch');
+            if (!inp) return;
+            inp.addEventListener('input', () => {
+                songSearchQuery = (inp.value || '').trim().toLowerCase();
+                renderSidebar();
+            });
+        })();
+
         function renderSidebar() {
             const s = document.getElementById('sidebar-scroll'); s.innerHTML = '';
+
+            const q = (songSearchQuery || '').trim().toLowerCase();
+
             setlists.forEach((f, fi) => {
                 const d = document.createElement('div'); d.className = 'setlist-folder';
                 d.innerHTML = `<div class="folder-header"><input type="text" class="folder-title" value="${f.name}" onchange="renameFolder('${f.id}',this.value)"><div class="folder-controls"><button class="icon-btn icon-del" onclick="delFolder(${fi})">✖</button></div></div><div class="song-container" ondragover="allowDrop(event)" ondrop="dropIn(event,${fi})"></div>`;
                 const c = d.querySelector('.song-container');
-                f.songs.forEach((song, si) => {
+
+                // NEW: filter songs by query (name)
+                const songsToShow = q
+                    ? f.songs.filter(song => ((song.name || '') + '').toLowerCase().includes(q))
+                    : f.songs;
+
+                songsToShow.forEach((song, siVisible) => {
+                    // IMPORTANT: keep original index for actions (rename/delete/move)
+                    const si = f.songs.indexOf(song);
+
                     const i = document.createElement('div'); i.className = 'list-item'; i.draggable = true;
                     i.ondragstart = (e) => dStart(e, fi, si); i.ondragend = dEnd; i.ondragover = (e) => dOver(e, i); i.ondragleave = (e) => dLeave(e, i); i.ondrop = (e) => dDrop(e, fi, si);
-                    i.innerHTML = `<span class="song-name" onclick="jump('${song.id}')">${si + 1}. ${song.name}</span><div class="song-controls"><button class="icon-btn icon-edit" onclick="renSong('${f.id}',${si})">✎</button><button class="icon-btn icon-del" onclick="delSong('${f.id}',${si})">✖</button></div>`;
+                    i.innerHTML = `<span class="song-name" onclick="jump('${song.id}')">${siVisible + 1}. ${song.name}</span><div class="song-controls"><button class="icon-btn icon-edit" onclick="renSong('${f.id}',${si})">✎</button><button class="icon-btn icon-del" onclick="delSong('${f.id}',${si})">✖</button></div>`;
                     c.appendChild(i);
                 });
+
                 d.onclick = (e) => { if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') curFolder = f.id; }
                 s.appendChild(d);
             });
@@ -1205,6 +1383,201 @@
         }
         function stopScroll() { isScrolling = false; document.getElementById('playBtn').innerText = "▶"; document.getElementById('playBtn').classList.add('paused'); cancelAnimationFrame(scrollReq); }
         document.body.onkeyup = (e) => { if (e.code === "Space" && document.getElementById('app-container').classList.contains('visible')) toggleScroll(); }
+
+        // --- METRONOME (WebAudio; persists across menu modals) ---
+        let metroCtx;
+        let metroTimer = null;
+        let metroIsRunning = false;
+        let nextMetroTime = 0;
+
+        // NEW: rAF fallback id
+        let metroRaf = null;
+
+        const metro = {
+            bpm: 120,
+            sound: 'click',
+            volume: 0.35,
+            lookaheadMs: 25,
+            scheduleAheadS: 0.1,
+            tapTimes: []
+        };
+
+        function ensureMetroCtx() {
+            if (!metroCtx) metroCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return metroCtx;
+        }
+
+        function toggleMetronome() {
+            // open/close only the modal visibility; audio keeps its own start/stop
+            closeMenu();
+            document.getElementById('metronome-modal').classList.toggle('open');
+        }
+        function openMetronome() { closeMenu(); document.getElementById('metronome-modal').classList.add('open'); }
+        function closeMetronome() { document.getElementById('metronome-modal').classList.remove('open'); }
+
+        function setMetroStatus() {
+            const badge = document.getElementById('metroStatus');
+            const btn = document.getElementById('metroToggleBtn');
+            badge.textContent = metroIsRunning ? 'Running' : 'Stopped';
+            badge.style.color = metroIsRunning ? 'var(--accent)' : 'var(--text-muted)';
+            btn.textContent = metroIsRunning ? 'Stop' : 'Start';
+        }
+
+        function metroIntervalS() { return 60 / Math.max(1, metro.bpm); }
+
+        function scheduleMetroTick(time) {
+            const ctx = ensureMetroCtx();
+
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, time);
+
+            // volume envelope
+            const vol = metro.volume;
+            g.gain.exponentialRampToValueAtTime(vol, time + 0.002);
+
+            if (metro.sound === 'click') {
+                o.type = 'square';
+                o.frequency.setValueAtTime(1500, time);
+                g.gain.exponentialRampToValueAtTime(0.0001, time + 0.03);
+            } else if (metro.sound === 'beep') {
+                o.type = 'sine';
+                o.frequency.setValueAtTime(880, time);
+                g.gain.exponentialRampToValueAtTime(0.0001, time + 0.08);
+            } else { // wood
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(420, time);
+                // sharper transient
+                g.gain.exponentialRampToValueAtTime(vol * 1.1, time + 0.0015);
+                g.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
+            }
+
+            o.connect(g);
+            g.connect(ctx.destination);
+
+            o.start(time);
+            o.stop(time + 0.12);
+        }
+
+        function metroScheduler() {
+            if (!metroIsRunning) return;
+
+            const ctx = ensureMetroCtx();
+
+            // NEW: if we fell behind (timer throttling), resync so it never "dies"
+            const behind = ctx.currentTime - nextMetroTime;
+            if (behind > Math.max(0.25, metroIntervalS() * 2)) {
+                nextMetroTime = ctx.currentTime + 0.02;
+            }
+
+            while (nextMetroTime < ctx.currentTime + metro.scheduleAheadS) {
+                scheduleMetroTick(nextMetroTime);
+                nextMetroTime += metroIntervalS();
+            }
+        }
+
+        // NEW: rAF loop (works even when setInterval is throttled)
+        function metroRafLoop() {
+            if (!metroIsRunning) return;
+            metroScheduler();
+            metroRaf = requestAnimationFrame(metroRafLoop);
+        }
+
+        async function startMetronome() {
+            const ctx = ensureMetroCtx();
+            if (ctx.state === 'suspended') await ctx.resume();
+
+            if (metroIsRunning) return;
+            metroIsRunning = true;
+
+            nextMetroTime = ctx.currentTime + 0.05;
+
+            // keep interval (fine when not throttled) + rAF fallback (helps when throttled)
+            metroTimer = setInterval(metroScheduler, metro.lookaheadMs);
+            if (!metroRaf) metroRaf = requestAnimationFrame(metroRafLoop);
+
+            setMetroStatus();
+        }
+
+        function stopMetronome() {
+            metroIsRunning = false;
+
+            if (metroTimer) clearInterval(metroTimer);
+            metroTimer = null;
+
+            // NEW: stop rAF fallback
+            if (metroRaf) cancelAnimationFrame(metroRaf);
+            metroRaf = null;
+
+            setMetroStatus();
+        }
+
+        function toggleMetronomeRun() {
+            if (metroIsRunning) stopMetronome();
+            else startMetronome();
+        }
+
+        function bindMetronomeUI() {
+            const bpmSlider = document.getElementById('bpmSlider');
+            const bpmValue = document.getElementById('bpmValue');
+            const metroSound = document.getElementById('metroSound');
+            const metroVolume = document.getElementById('metroVolume');
+
+            if (!bpmSlider || !bpmValue || !metroSound || !metroVolume) return;
+
+            bpmSlider.addEventListener('input', () => {
+                metro.bpm = parseInt(bpmSlider.value, 10);
+                bpmValue.textContent = String(metro.bpm);
+                // scheduler adapts instantly because interval uses metro.bpm for next ticks
+            });
+
+            metroSound.addEventListener('change', () => {
+                metro.sound = metroSound.value;
+            });
+
+            metroVolume.addEventListener('change', () => {
+                metro.volume = parseFloat(metroVolume.value);
+            });
+
+            // initial
+            metro.bpm = parseInt(bpmSlider.value, 10);
+            bpmValue.textContent = String(metro.bpm);
+            metro.sound = metroSound.value;
+            metro.volume = parseFloat(metroVolume.value);
+            setMetroStatus();
+        }
+
+        function tapTempo() {
+            const now = performance.now();
+            metro.tapTimes.push(now);
+            // keep last 6 taps
+            if (metro.tapTimes.length > 6) metro.tapTimes.shift();
+            if (metro.tapTimes.length < 2) return;
+
+            let diffs = [];
+            for (let i = 1; i < metro.tapTimes.length; i++) diffs.push(metro.tapTimes[i] - metro.tapTimes[i - 1]);
+            // average ms between taps
+            const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+            const bpm = Math.round(60000 / avg);
+
+            const clamped = Math.max(40, Math.min(240, bpm));
+            metro.bpm = clamped;
+
+            const bpmSlider = document.getElementById('bpmSlider');
+            const bpmValue = document.getElementById('bpmValue');
+            if (bpmSlider) bpmSlider.value = String(clamped);
+            if (bpmValue) bpmValue.textContent = String(clamped);
+        }
+
+        // Bind once (after DOM exists)
+        bindMetronomeUI();
+
+        // Optional: stop metronome when leaving app (keeps "doesn't close when opening other menu pages")
+        const _exitApp = exitApp;
+        exitApp = function () {
+            stopMetronome();
+            _exitApp();
+        }
     </script>
 </body>
 
