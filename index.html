@@ -1014,6 +1014,26 @@
             <button class="modal-close" onclick="closeTuner()">✖</button>
             <h2>Guitar Reference Tuner</h2>
             <p style="color:var(--text-muted); margin-bottom:20px;">Tap a button to play the tone.</p>
+            <div class="tuner-transpose-row"
+                style="display:flex; align-items:center; justify-content:center; gap:10px; margin: 0 0 16px 0;">
+                <label for="tunerTranspose" style="color:var(--text-muted); font-weight:600;">Transpose</label>
+                <select id="tunerTranspose" class="filter-btn"
+                    style="border-radius:12px; padding:10px 12px; min-width:110px;">
+                    <option value="-6">-6</option>
+                    <option value="-5">-5</option>
+                    <option value="-4">-4</option>
+                    <option value="-3">-3</option>
+                    <option value="-2">-2</option>
+                    <option value="-1">-1</option>
+                    <option value="0" selected>0</option>
+                    <option value="1">+1</option>
+                    <option value="2">+2</option>
+                    <option value="3">+3</option>
+                    <option value="4">+4</option>
+                    <option value="5">+5</option>
+                    <option value="6">+6</option>
+                </select>
+            </div>
             <div class="tone-bar">
                 <button class="tone-btn" onclick="playTone(82.41, this)">E</button>
                 <button class="tone-btn" onclick="playTone(110.00, this)">A</button>
@@ -1192,8 +1212,14 @@
         // --- TONE GENERATOR ONLY ---
         let audioCtx;
         let currentOsc = null;
+        let tunerTransposeSemitones = 0;
 
-        function openTuner() { closeMenu(); document.getElementById('tuner-modal').classList.add('open'); }
+        function openTuner() {
+            closeMenu();
+            document.getElementById('tuner-modal').classList.add('open');
+            const sel = document.getElementById('tunerTranspose');
+            if (sel) tunerTransposeSemitones = parseInt(sel.value || '0', 10) || 0;
+        }
         function closeTuner() { document.getElementById('tuner-modal').classList.remove('open'); stopTone(); }
 
         async function playTone(freq, btn) {
@@ -1206,10 +1232,14 @@
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') await audioCtx.resume();
 
+            // Apply global transpose for all strings (in semitones)
+            const semis = tunerTransposeSemitones || 0;
+            const shiftedFreq = freq * Math.pow(2, semis / 12);
+
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(shiftedFreq, audioCtx.currentTime);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
@@ -1221,6 +1251,27 @@
             if (currentOsc) { currentOsc.stop(); currentOsc = null; }
             document.querySelectorAll('.tone-btn').forEach(b => { b.classList.remove('active'); b.classList.remove('playing-now'); });
         }
+
+        // Keep transpose in sync with dropdown, and update tone in real-time if one is playing.
+        (function initTunerTranspose() {
+            const sel = document.getElementById('tunerTranspose');
+            if (!sel) return;
+
+            sel.addEventListener('change', () => {
+                tunerTransposeSemitones = parseInt(sel.value || '0', 10) || 0;
+                if (currentOsc && audioCtx) {
+                    const activeBtn = document.querySelector('.tone-btn.playing-now');
+                    if (!activeBtn) return;
+                    const onclick = activeBtn.getAttribute('onclick') || '';
+                    const m = onclick.match(/playTone\(([^,]+),\s*this\)/);
+                    if (!m) return;
+                    const baseFreq = parseFloat(m[1]);
+                    if (!Number.isFinite(baseFreq)) return;
+                    const shiftedFreq = baseFreq * Math.pow(2, tunerTransposeSemitones / 12);
+                    currentOsc.frequency.setValueAtTime(shiftedFreq, audioCtx.currentTime);
+                }
+            });
+        })();
 
         // --- CHORDS DB (FIXED & MARKERS) ---
         const chordDB = {
