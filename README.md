@@ -26,6 +26,10 @@ As a musician, I was tired of shuffling through papers, dealing with heavy apps 
 
 ### 🚀 Live Performance Tools
 * **Smart Auto-Scroll:** 60fps smooth scrolling logic. Adjust speed (1-15) to match the song's tempo perfectly.
+* **Integrated Metronome:** Keep the perfect rhythm with a fully adjustable metronome.
+ - Customizable BPM: Fine-tune the speed to match any track.
+ - Volume Control: Independent slider to balance the click with your stage sound.
+ - Sound Selector: Choose between different click sounds (Digital, Woodblock, Percussion) to find what cuts through the mix best.
 * **Reference Tuner:** Built-in audio generator for standard tuning (E A D G B E). Tune by ear without needing external hardware.
 * **Chord Library:** A comprehensive database of chords (Naturals, Sharps, Flats) with accurate, clean fingering diagrams (no confusing numbers, just visual dots).
 
